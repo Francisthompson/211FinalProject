@@ -1,0 +1,27 @@
+﻿<div class="top-row ps-3 navbar navbar-dark" style="background-color: black">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Reservation Manager</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()" style="background-color: darkslategrey;">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="reservations">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Reservations
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="fetchdata">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Add Reservations
+            </NavLink>
+        </div>
+    </nav>
+</div>

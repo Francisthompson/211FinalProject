@@ -1,0 +1,205 @@
+﻿@page "/fetchdata"
+
+@using EndToEnd.Data
+@inject ReservationService ReservationService
+
+<h1>Reservation Management</h1>
+
+<p style="color:red">@Error</p>
+
+@if (reservations == null)
+{
+    <!-- Show this if the current user has no data... yet... -->
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <!-- Show the reservations for the current user -->
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Time</th>
+                <th>Table #</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var reservation in reservations)
+            {
+                <tr>
+                    <td><InputDate @bind-Value="reservation.Date" /></td>
+                    <td>@reservation.Customer</td>
+                    <td>@reservation.Time</td>
+                    <td>@reservation.Table</td>
+                    <td>
+                        <!-- Edit the current reservation -->
+                        <button class="btn btn-info"
+                                @onclick="(() => EditReservation(reservation))">
+                            Edit
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p>
+        <!-- Add a new reservation -->
+        <button class="btn btn-success"
+                @onclick="AddNewReservation">
+            Add New Reservation
+        </button>
+    </p>
+
+    @if (ShowPopup)
+    {
+        <!-- This is the popup to create or edit a reservation -->
+        <div class="modal" tabindex="-1" style="display:block" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Edit Reservation</h3>
+                        <!-- Button to close the popup -->
+                        <button type="button" class="close"
+                                @onclick="ClosePopup">
+                            <span aria-hidden="true">X</span>
+                        </button>
+                    </div>
+                    <!-- Edit form for the current Reservation -->
+                    <div class="modal-body">
+                        <input class="form-control" type="text"
+                               placeholder="Customer"
+                               @bind="objReservation.Customer" />
+                        <input class="form-control" type="text"
+                               placeholder="Time"
+                               @bind="objReservation.Time" />
+                        <input class="form-control" type="number"
+                               placeholder="Table"
+                               @bind="objReservation.Table" />
+                        <br />
+                        <!-- Button to save the reservation -->
+                        <button class="btn btn-success"
+                                @onclick="SaveReservation">
+                            Save
+                        </button>&nbsp;
+                        <!-- Only show delete button if not a new record -->
+                        @if (objReservation.Id > 0)
+                        {
+                            <!-- Button to delete the reservation -->
+                            <button class="btn btn-danger"
+                                    @onclick="DeleteReservation">
+                                Delete
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+}
+@code
+{
+    string Error = "";
+    List<Reservation> reservations = new List<Reservation>();
+    Reservation objReservation = new Reservation();
+    bool ShowPopup = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the reservations
+        reservations = await ReservationService.GetReservationsAsync();
+    }
+
+    void AddNewReservation()
+    {
+        // Make new reservation
+        objReservation = new Reservation();
+
+        // Set Id to 0 so we know it is a new record
+        objReservation.Id = 0;
+
+        // Open the Popup
+        ShowPopup = true;
+    }
+
+    void EditReservation(Reservation reservation)
+    {
+        // Set the selected reservation
+        // as the current reservation
+        objReservation = reservation;
+
+        // Open the Popup
+        ShowPopup = true;
+    }
+
+    void ClosePopup()
+    {
+        // Close the Popup
+        ShowPopup = false;
+    }
+
+    async Task SaveReservation()
+    {
+        // Close the Popup
+        ShowPopup = false;
+        Error = "";
+
+        try
+        {
+            // Check if required fields are empty
+            if (string.IsNullOrEmpty(objReservation.Customer) || string.IsNullOrEmpty(objReservation.Time))
+            {
+                throw new Exception("Customer and Time fields are required.");
+            }
+            // A new reservation will have the Id set to 0
+            if (objReservation.Id == 0)
+            {
+                // Create new reservation
+                Reservation newReservation = new Reservation
+                    {
+                        Date = DateTime.Now,
+                        Customer = objReservation.Customer,
+                        Time = objReservation.Time,
+                        Table = objReservation.Table
+                    };
+
+                // Save the result
+                var savedReservation = await ReservationService.CreateReservationAsync(newReservation);
+
+                // Add the reservation
+                reservations.Add(savedReservation);
+            }
+            else
+            {
+                // This is an update
+                await ReservationService.UpdateReservationAsync(objReservation);
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+
+    async Task DeleteReservation()
+    {
+        // Close the Popup
+        ShowPopup = false;
+
+        try
+        {
+            Error = "";
+
+            // Delete the reservation
+            await ReservationService.DeleteReservationAsync(objReservation);
+
+            // Remove the reservation
+            reservations.Remove(objReservation);
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+}

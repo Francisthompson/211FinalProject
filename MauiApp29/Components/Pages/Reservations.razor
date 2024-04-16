@@ -1,0 +1,42 @@
+﻿@page "/reservations"
+@using EndToEnd.Data
+
+<h1>Reservations</h1>
+
+@if (reservations == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        @foreach (var reservation in reservations)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card btn-outline-dark mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Reservation</h5>
+                        <p class="card-text">Date: @reservation.Date.ToShortDateString()</p>
+                        <p class="card-text">Customer: @reservation.Customer</p>
+                        <p class="card-text">Time: @reservation.Time</p>
+                        <p class="card-text">Table #: @reservation.Table</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Reservation> reservations;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Reservations.db");
+
+        var reservationService = new ReservationService(dbPath);
+
+        reservations = await reservationService.GetReservationsAsync();
+    }
+}
+
